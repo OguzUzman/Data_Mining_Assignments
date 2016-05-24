@@ -1,4 +1,6 @@
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by oguz on 24/05/16.
@@ -14,6 +16,9 @@ public class Main {
         //Sizeis number of rows(instances)
         boolean[] label;
         String fileName = "SPECT.train.txt";
+
+        List<HypothesisNode> bestHypoteses = new ArrayList<>();
+        double minQuality = 0;
         int m, n, k, F;
 
         //m instances
@@ -41,11 +46,19 @@ public class Main {
             }
         }
 
+        HypothesisNode startingNode = new HypothesisNode(n, -1, -1, null);
+
+        traverseNodes(1, startingNode, data);
+
     }
 
-    public static void refine(HypothesisNode hypothesisNode ){
 
+    public static void traverseNodes(int F, HypothesisNode hypothesisNode, boolean[][] data, List<HypothesisNode> bestHypoteses, int maxBest){
+        double quality = calculateQuality(F, hypothesisNode, data);
+        if(bestHypoteses.size() < maxBest | )
     }
+
+
 
     /**
      *
@@ -54,7 +67,7 @@ public class Main {
      * @param data dataset
      * @return
      */
-    public static double quality(int F, HypothesisNode hypothesisNode, boolean[][] data){
+    public static double calculateQuality(int F, HypothesisNode hypothesisNode, boolean[][] data){
         return 0;
     }
 }
