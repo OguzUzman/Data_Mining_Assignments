@@ -13,9 +13,18 @@ public class HypothesisNode {
      */
     byte[] hypothesis;
 
+    HypothesisNode father;
     List<HypothesisNode> children;
 
+    public int getChildrenNum() {
+        return children.size();
+    }
 
+    public HypothesisNode(int n, int index, byte value) {
+        hypothesis = new byte[n];
+        hypothesis = father.hypothesis;
+        hypothesis[index-1] = value;
 
+    }
 
 }
