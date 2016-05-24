@@ -15,7 +15,7 @@ public class HypothesisNode {
 
     List<HypothesisNode> children;
 
-
+    int size = 0;
 
 
 }
