@@ -96,19 +96,30 @@ public class HypothesisNode{
     @Override
     public String toString(){
         StringBuilder stringBuilder = new StringBuilder();
-        for(int i = 0; i < hypothesis.length; i++){
+        for(int i = 0; i < hypothesis.length-1; i++){
             switch (hypothesis[i]){
                 case -1:
-                    stringBuilder.append(" ");
+                    stringBuilder.append("");
                     break;
                 case 0:
-                    stringBuilder.append("0");
+                    stringBuilder.append(" ¬x" + (i+1) + " ∧");
                     break;
                 case 1:
-                    stringBuilder.append("1");
+                    stringBuilder.append(" x" + (i+1) + " ∧");
                     break;
             }
         }
+        switch (hypothesis[hypothesis.length - 1]) {
+            case -1:
+                break;
+            case 0:
+                stringBuilder.append(" ¬x" + (hypothesis.length) + " ");
+                break;
+            case 1:
+                stringBuilder.append(" x" + (hypothesis.length) + " ");
+                break;
+        }
+
         return stringBuilder.toString();
     }
 

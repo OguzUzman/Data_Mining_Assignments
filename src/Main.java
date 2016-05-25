@@ -21,6 +21,7 @@ public class Main {
         double minQuality = 0;
         int m, n, k, F;
 
+        StringBuilder sb = new StringBuilder();
         //m instances
         //n attributes
         File file = new File(fileName);
@@ -60,9 +61,29 @@ public class Main {
         bfs3(F, startingHypothesis, data, bestHypoteses, k, p0, labels, m, 0, n, 0, new ArrayList<HypothesisNode>());
 
 
+        sb.append("F = ");
+        sb.append(F);
+        sb.append("  ");
+        sb.append("K = ");
+        sb.append(k);
+        sb.append("  ");
+        sb.append("m = ");
+        sb.append(m);
+        sb.append("  ");
+        sb.append("n = ");
+        sb.append(n);
+        sb.append("\n");
+
         for(HypothesisNode hypothesisNode : bestHypoteses){
-            System.out.println(hypothesisNode);
+            sb.append(hypothesisNode);
+            sb.append("  q = ");
+            sb.append(calculateQuality(F, hypothesisNode, data, p0, labels, m, n));
+            sb.append("  Z-Score = ");
+            sb.append(zScore(hypothesisNode, data, labels, m, n));
+            sb.append("\n");
         }
+        System.out.println(sb);
+
 
     }
 
@@ -126,8 +147,9 @@ public class Main {
                 worstQualityHypothesis = calculateQuality(F, bestHypoteses.get(bestHypoteses.size()-1), data, p0,
                         labels, m, numberOfAttributes);
             } else if(calculateQuality(F, hypothesisNode, data, p0, labels, m, numberOfAttributes) > worstQualityHypothesis){
+                sortHypothesesArray(bestHypoteses, F, data, p0, labels, m, numberOfAttributes);
                 bestHypoteses.set(sizeOfBestHypothesis-1, hypothesisNode);
-                sortHypothesesArray(hypothesisNodes, F, data, p0, labels, m, numberOfAttributes);
+                sortHypothesesArray(bestHypoteses, F, data, p0, labels, m, numberOfAttributes);
                 worstQualityHypothesis = calculateQuality(F, bestHypoteses.get(sizeOfBestHypothesis-1), data, p0,
                         labels, m, numberOfAttributes);
             }
@@ -214,6 +236,9 @@ public class Main {
                 break;
             case 2:
                 quality = ((g)/(1.0-g))*Math.pow(p-p0, 2);
+                if (g == 1.0) {
+                    quality = 0.0;
+                }
                 break;
             case 3:
                 quality = g*(2*p-1.0) + 1 - p0;
@@ -350,4 +375,17 @@ public class Main {
         hypothesisNode.setP(p);
         return p;
     }
+
+    public static double zScore(HypothesisNode h, boolean[][] data, boolean[] labels, int m, int numberOfAttributes) {
+        double result = 0;
+        double p = 0;
+        double pprime = 0;
+        p = percentageOfPositivesInDataSet(labels);
+        pprime = extSize(h, data, labels, m, numberOfAttributes) / (double)labels.length;
+
+        result = (double)(pprime - p) / Math.sqrt(p*(1-p)/labels.length);
+        return result;
+    }
+
 }
+
