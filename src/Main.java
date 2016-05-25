@@ -103,51 +103,59 @@ public class Main {
         }
     }
 
-    public static void bfs3(int F, List<HypothesisNode> hypothesisNodes,
+    public static void bfs2(int F, HypothesisNode hypothesisNode,
                             final boolean[][] data, List<HypothesisNode> bestHypoteses,
-                            int sizeOfBestHypothesis, final double p0, final boolean[] labels, final int m, double worstQualityHypothesis ){
-        if(hypothesisNodes.size() != 0)
-            return;
-        Iterator<HypothesisNode> iterator = bestHypoteses.iterator();
-        List<HypothesisNode> childrenHypotheses = new ArrayList<>();
-        while (iterator.hasNext()){
-            HypothesisNode hypothesisNode = iterator.next();
-            if(bestHypoteses.size() < sizeOfBestHypothesis){
-                bestHypoteses.add(hypothesisNode);
-                sortHypothesesArray(bestHypoteses, F, data, p0, labels, m);
-                worstQualityHypothesis = calculateQuality(F, bestHypoteses.get(sizeOfBestHypothesis-1), data, p0,
-                        labels, m);
-            } else if(calculateQuality(F, hypothesisNode, data, p0, labels, m) > worstQualityHypothesis){
-                hypothesisNodes.set(sizeOfBestHypothesis-1, hypothesisNode);
-                sortHypothesesArray(hypothesisNodes, F, data, p0, labels, m);
-                worstQualityHypothesis = calculateQuality(F, bestHypoteses.get(sizeOfBestHypothesis-1), data, p0,
-                        labels, m);
-            }
+                            int sizeOfBestHypothesis, final double p0, final boolean[] labels, final int m) {
+        double minQualityHypothesis = 0;
+        //Queue queue = new LinkedList();
+        //queue.add(hypothesisNode);
+        hypothesisNode.visited = true;
 
-            double optimisticQuality = calculateOptimisticQuality(F, hypothesisNode, data, labels, p0, m);
+        List<HypothesisNode> subset = hypothesisNode.getChildren();
 
-            if(optimisticQuality < worstQualityHypothesis){
-                //Prune // Not really necessary
-                iterator.remove();
-            } else {
-                childrenHypotheses.addAll(hypothesisNode.children);
+        while (!subset.isEmpty()) {
+            List<HypothesisNode> nextSubset = new ArrayList<HypothesisNode>();
+            for (int i = 0; i < subset.size(); i++) {
+                if(bestHypoteses.size()<sizeOfBestHypothesis){
+                    bestHypoteses.add(subset.get(i));
+                } else if(calculateQuality(F, subset.get(i), data, p0, labels, m) > minQualityHypothesis){
+                    bestHypoteses.set(sizeOfBestHypothesis, subset.get(i));
+                    final HypothesisNode tempHypothesisNode = subset.get(i);
+                    final int tempF = F;
+                    Collections.sort(bestHypoteses, new Comparator<HypothesisNode>() {
+                        @Override
+                        public int compare(HypothesisNode o1, HypothesisNode o2) {
+                            if(calculateQuality(tempF, tempHypothesisNode, data, p0, labels, m) > calculateQuality(tempF, tempHypothesisNode, data, p0, labels, m))
+                                return 1;
+                            if (calculateQuality(tempF, tempHypothesisNode, data, p0, labels, m) < calculateQuality(tempF, tempHypothesisNode, data, p0, labels, m))
+                                return -1;
+                            return 0;
+                        }
+                    });
+                    minQualityHypothesis = bestHypoteses.get(sizeOfBestHypothesis).getQuality();
+                }
+
+                if(calculateOptimisticQuality(F, subset.get(i), data, labels, p0, m) < minQualityHypothesis){
+                    subset.get(i).visited = true;
+                    subset.get(i).prune();
+                } else{ //do nothing now?
+                    /*
+                    List<HypothesisNode> children = hypothesisNode.children;
+                    for (HypothesisNode child : children) {
+                        if (!child.visited) {
+                            queue.add(child);
+                            child.visited = true;
+                        }
+                    }
+                    */
+                }
+
+                // add children to next subset
+                if (subset.get(i).getChildren().size() == 0) {
+
+                }
             }
         }
-        bfs3(F, childrenHypotheses, data, bestHypoteses, sizeOfBestHypothesis, p0, labels, m, worstQualityHypothesis);
-    }
-
-    public static void sortHypothesesArray(List<HypothesisNode> hypothesisNodes, final int F, final boolean[][] data,
-                                           final double p0, final boolean[] labels, final int m){
-        Collections.sort(hypothesisNodes, new Comparator<HypothesisNode>() {
-            @Override
-            public int compare(HypothesisNode o1, HypothesisNode o2) {
-                if(calculateQuality(F, o1, data, p0, labels, m) > calculateQuality(F, o2, data, p0, labels, m))
-                    return 1;
-                if (calculateQuality(F, o1, data, p0, labels, m) < calculateQuality(F, o2, data, p0, labels, m))
-                    return -1;
-                return 0;
-            }
-        });
     }
 
 
