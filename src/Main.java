@@ -103,6 +103,53 @@ public class Main {
         }
     }
 
+    public static void bfs3(int F, List<HypothesisNode> hypothesisNodes,
+                            final boolean[][] data, List<HypothesisNode> bestHypoteses,
+                            int sizeOfBestHypothesis, final double p0, final boolean[] labels, final int m, double worstQualityHypothesis ){
+        if(hypothesisNodes.size() != 0)
+            return;
+        Iterator<HypothesisNode> iterator = bestHypoteses.iterator();
+        List<HypothesisNode> childrenHypotheses = new ArrayList<>();
+        while (iterator.hasNext()){
+            HypothesisNode hypothesisNode = iterator.next();
+            if(bestHypoteses.size() < sizeOfBestHypothesis){
+                bestHypoteses.add(hypothesisNode);
+                sortHypothesesArray(bestHypoteses, F, data, p0, labels, m);
+                worstQualityHypothesis = calculateQuality(F, bestHypoteses.get(sizeOfBestHypothesis-1), data, p0,
+                        labels, m);
+            } else if(calculateQuality(F, hypothesisNode, data, p0, labels, m) > worstQualityHypothesis){
+                hypothesisNodes.set(sizeOfBestHypothesis-1, hypothesisNode);
+                sortHypothesesArray(hypothesisNodes, F, data, p0, labels, m);
+                worstQualityHypothesis = calculateQuality(F, bestHypoteses.get(sizeOfBestHypothesis-1), data, p0,
+                        labels, m);
+            }
+
+            double optimisticQuality = calculateOptimisticQuality(F, hypothesisNode, data, labels, p0, m);
+
+            if(optimisticQuality < worstQualityHypothesis){
+                //Prune // Not really necessary
+                iterator.remove();
+            } else {
+                childrenHypotheses.addAll(hypothesisNode.children);
+            }
+        }
+        bfs3(F, childrenHypotheses, data, bestHypoteses, sizeOfBestHypothesis, p0, labels, m, worstQualityHypothesis);
+    }
+
+    public static void sortHypothesesArray(List<HypothesisNode> hypothesisNodes, final int F, final boolean[][] data,
+                                           final double p0, final boolean[] labels, final int m){
+        Collections.sort(hypothesisNodes, new Comparator<HypothesisNode>() {
+            @Override
+            public int compare(HypothesisNode o1, HypothesisNode o2) {
+                if(calculateQuality(F, o1, data, p0, labels, m) > calculateQuality(F, o2, data, p0, labels, m))
+                    return 1;
+                if (calculateQuality(F, o1, data, p0, labels, m) < calculateQuality(F, o2, data, p0, labels, m))
+                    return -1;
+                return 0;
+            }
+        });
+    }
+
 
     /**
     public static void traverseNodes2(int F, HypothesisNode hypothesisNode,
