@@ -16,8 +16,37 @@ public class HypothesisNode{
     int[] hypothesis;
 
     HypothesisNode father;
-    double quality, optimalQuality;
+    private double quality, optimalQuality;
+    boolean qualityIsSet = false;
+    boolean optimalQualitySet = false;
     List<HypothesisNode> children = null;
+    int extSize = -1;
+
+    public double getQuality() {
+        return quality;
+    }
+
+    public void setQuality(double quality) {
+        qualityIsSet = true;
+        this.quality = quality;
+    }
+
+    public double getOptimalQuality() {
+        return optimalQuality;
+    }
+
+    public void setOptimalQuality(double optimalQuality) {
+        optimalQualitySet = true;
+        this.optimalQuality = optimalQuality;
+    }
+
+    public boolean isOptimalQualitySet() {
+        return optimalQualitySet;
+    }
+
+    public boolean isQualityIsSet() {
+        return qualityIsSet;
+    }
 
     public int getChildrenNum() {
         return children.size();
@@ -105,4 +134,17 @@ public class HypothesisNode{
         return children;
     }
 
+    double p = -1;
+
+    public void setP(double p){
+        this.p = p;
+    }
+
+    public boolean isPSet(){
+        return !(p == -1);
+    }
+
+    public double getP() {
+        return p;
+    }
 }

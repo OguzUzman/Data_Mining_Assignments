@@ -61,8 +61,8 @@ public class Main {
 
 
     public static void bfs(int F, HypothesisNode hypothesisNode,
-                           boolean[][] data, List<HypothesisNode> bestHypoteses,
-                           int sizeOfBestHypothesis, double p0){
+                           final boolean[][] data, List<HypothesisNode> bestHypoteses,
+                           int sizeOfBestHypothesis, final double p0){
         double minQualityHypothesis = 0;
         Queue queue = new LinkedList();
         queue.add(hypothesisNode);
@@ -73,17 +73,19 @@ public class Main {
                 bestHypoteses.add(hypothesisNode);
             } else if(calculateQuality(F, hypothesisNode, data, p0) > minQualityHypothesis){
                 bestHypoteses.set(sizeOfBestHypothesis, hypothesisNode);
+                final HypothesisNode tempHypothesisNode = hypothesisNode;
+                final int tempF = F;
                 Collections.sort(bestHypoteses, new Comparator<HypothesisNode>() {
                     @Override
                     public int compare(HypothesisNode o1, HypothesisNode o2) {
-                        if(o1.quality > o2.quality)
+                        if(calculateQuality(tempF, tempHypothesisNode, data, p0) > calculateQuality(tempF, tempHypothesisNode, data, p0))
                             return 1;
-                        if (o1.quality < o2.quality)
+                        if (calculateQuality(tempF, tempHypothesisNode, data, p0) < calculateQuality(tempF, tempHypothesisNode, data, p0))
                             return -1;
                         return 0;
                     }
                 });
-                minQualityHypothesis = bestHypoteses.get(sizeOfBestHypothesis).quality;
+                minQualityHypothesis = bestHypoteses.get(sizeOfBestHypothesis).getQuality();
             }
 
             if(calculateOptimisticQuality(F, hypothesisNode, data, p0) < minQualityHypothesis){
@@ -137,12 +139,28 @@ public class Main {
      * @param data dataset
      * @return
      */
-    public static double calculateQuality(int F, HypothesisNode hypothesisNode, boolean[][] data, double p0){
-
+    public static double calculateQuality(int F, HypothesisNode hypothesisNode, boolean[][] data, double p0, boolean[] labels, int m){
+        if(hypothesisNode.isQualityIsSet())
+            return hypothesisNode.getQuality();
+        double p = 0;
+        if(hypothesisNode.isPSet()){
+            p = hypothesisNode.getP();
+        }else {
+            p = calculateP(hypothesisNode, data, labels, m);
+        }
+        double g = extSize(hypothesisNode, data, labels, m);
+        switch (F){
+            case 1:
+                break;
+            case 2:
+                break;
+            case 3:
+                break;
+        }
         return 0;
     }
     public static double calculateOptimisticQuality(int F, HypothesisNode hypothesisNode, boolean[][] data, double p0){
-
+        return 0;
     }
     public static List<HypothesisNode> getUnvisitedChild(HypothesisNode hypothesisNode){
 return null;
@@ -170,6 +188,8 @@ return null;
      * @return
      */
     public static int extSize(HypothesisNode hypothesisNode, boolean[][] data, boolean[] labels, int m){
+        if(hypothesisNode.extSize != -1)
+            return hypothesisNode.extSize;
         int total = 0;
         int[] hypothesis = hypothesisNode.hypothesis;
         for(int i = 0; i < labels.length; i++){
@@ -188,11 +208,11 @@ return null;
                 total++;
             }
         }
+        hypothesisNode.extSize = total;
         return total;
     }
 
     /**
-     * Gives p
      * @param hypothesisNode
      * @param data
      * @param labels
@@ -232,8 +252,12 @@ return null;
      * @return
      */
     public static double calculateP(HypothesisNode hypothesisNode, boolean[][] data, boolean[] labels, int m){
+        if(hypothesisNode.isPSet())
+            return hypothesisNode.getP();
         double intersectionCount = extTIntersectionSize(hypothesisNode, data, labels, m);
         double extSize = extSize(hypothesisNode, data, labels, m);
-        return intersectionCount/extSize;
+        double p = intersectionCount/extSize;
+        hypothesisNode.setP(p);
+        return p;
     }
 }
