@@ -79,12 +79,20 @@ public class Main {
             sb.append("  q = ");
             sb.append(calculateQuality(F, hypothesisNode, data, p0, labels, m, n));
             sb.append("  Z-Score = ");
-            sb.append(zScore(hypothesisNode, data, labels, m, n));
-            sb.append("\n");
+            double z = zScore(hypothesisNode, data, labels, m, n);
+            sb.append(z);
+            if (Math.abs(z) > 2.58) {
+                sb.append("  rejected");
+            }else{
+                sb.append("  not rejected");
+            }
+            sb.append("\r\n");
         }
         System.out.println(sb);
 
-
+        PrintWriter writer = new PrintWriter("./output.txt");
+        writer.print(sb);
+        writer.close();
     }
 
 /*
