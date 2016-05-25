@@ -53,7 +53,7 @@ public class Main {
                 numOfPositives++;
         }
 
-        double p0 = ((double)numOfPositives)/((double)n);
+        double p0 = percentageOfPositivesInDataSet(labels);
 
         bfs(F, startingNode, data, bestHypoteses, k, p0);
 
@@ -63,7 +63,6 @@ public class Main {
     public static void bfs(int F, HypothesisNode hypothesisNode,
                            boolean[][] data, List<HypothesisNode> bestHypoteses,
                            int sizeOfBestHypothesis, double p0){
-        // DFS uses Stack data structure
         double minQualityHypothesis = 0;
         Queue queue = new LinkedList();
         queue.add(hypothesisNode);
@@ -149,12 +148,92 @@ public class Main {
 return null;
     }
 
+    /**
+     * Gives p0
+     * @param labels
+     * @return
+     */
+    public static double percentageOfPositivesInDataSet(boolean[] labels){
+        double count = 0;
+        for (boolean label: labels){
+            if (label)
+                count++;
+        }
+        return count/((double)labels.length);
+    }
+
+    /**
+     * @param hypothesisNode
+     * @param data
+     * @param labels
+     * @param m
+     * @return
+     */
     public static int extSize(HypothesisNode hypothesisNode, boolean[][] data, boolean[] labels, int m){
         int total = 0;
+        int[] hypothesis = hypothesisNode.hypothesis;
         for(int i = 0; i < labels.length; i++){
+            boolean matches = true;
             for(int j = 0; j < m; j++){
-
+                /**
+                 * Since "0 and 1" or "1 and 1" will give 0; and others 1; We can check it by summation. 0+ 1 = 1+0 = 1
+                 * While -1 +0 = -1; -1 + 1 = 0
+                 */
+                if((hypothesis[j] + (data[i][j] ? 1:0)) == 1){
+                    matches = false;
+                    break;
+                }
+            }
+            if(matches){
+                total++;
             }
         }
+        return total;
+    }
+
+    /**
+     * Gives p
+     * @param hypothesisNode
+     * @param data
+     * @param labels
+     * @param m
+     * @return
+     */
+    public static int extTIntersectionSize(HypothesisNode hypothesisNode, boolean[][] data, boolean[] labels, int m){
+        int total = 0;
+        int[] hypothesis = hypothesisNode.hypothesis;
+        for(int i = 0; i < labels.length; i++){
+            boolean matches = true;
+            if(labels[i]) {
+                for (int j = 0; j < m; j++) {
+                    /**
+                     * Since "0 and 1" or "1 and 1" will give 0; and others 1; We can check it by summation. 0+ 1 = 1+0 = 1
+                     * While -1 +0 = -1; -1 + 1 = 0
+                     */
+                    if ((hypothesis[j] + (data[i][j] ? 1 : 0)) == 1) {
+                        matches = false;
+                        break;
+                    }
+                }
+            } else {
+                matches = false;
+            }
+            if(matches){
+                total++;
+            }
+        }
+        return total;
+    }
+
+    /**
+     * Calculates p with hypothesis, data and labels
+     * @param hypothesisNode
+     * @param data
+     * @return
+     */
+    public static double calculateP(HypothesisNode hypothesisNode, boolean[][] data, boolean[] labels, int m){
+        double intersectionCount = extTIntersectionSize(hypothesisNode, data, labels, m);
+        double extSize = extSize(hypothesisNode, data, labels, m);
+        return intersectionCount/extSize;
     }
 }
