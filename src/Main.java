@@ -55,14 +55,14 @@ public class Main {
 
         double p0 = percentageOfPositivesInDataSet(labels);
 
-        bfs(F, startingNode, data, bestHypoteses, k, p0);
+        bfs(F, startingNode, data, bestHypoteses, k, p0, labels, m);
 
     }
 
 
     public static void bfs(int F, HypothesisNode hypothesisNode,
                            final boolean[][] data, List<HypothesisNode> bestHypoteses,
-                           int sizeOfBestHypothesis, final double p0){
+                           int sizeOfBestHypothesis, final double p0, final boolean[] labels, final int m){
         double minQualityHypothesis = 0;
         Queue queue = new LinkedList();
         queue.add(hypothesisNode);
@@ -71,16 +71,16 @@ public class Main {
             hypothesisNode = (HypothesisNode) queue.remove();
             if(bestHypoteses.size()<sizeOfBestHypothesis){
                 bestHypoteses.add(hypothesisNode);
-            } else if(calculateQuality(F, hypothesisNode, data, p0) > minQualityHypothesis){
+            } else if(calculateQuality(F, hypothesisNode, data, p0, labels, m) > minQualityHypothesis){
                 bestHypoteses.set(sizeOfBestHypothesis, hypothesisNode);
                 final HypothesisNode tempHypothesisNode = hypothesisNode;
                 final int tempF = F;
                 Collections.sort(bestHypoteses, new Comparator<HypothesisNode>() {
                     @Override
                     public int compare(HypothesisNode o1, HypothesisNode o2) {
-                        if(calculateQuality(tempF, tempHypothesisNode, data, p0) > calculateQuality(tempF, tempHypothesisNode, data, p0))
+                        if(calculateQuality(tempF, tempHypothesisNode, data, p0, labels, m) > calculateQuality(tempF, tempHypothesisNode, data, p0, labels, m))
                             return 1;
-                        if (calculateQuality(tempF, tempHypothesisNode, data, p0) < calculateQuality(tempF, tempHypothesisNode, data, p0))
+                        if (calculateQuality(tempF, tempHypothesisNode, data, p0, labels, m) < calculateQuality(tempF, tempHypothesisNode, data, p0, labels, m))
                             return -1;
                         return 0;
                     }
@@ -88,7 +88,7 @@ public class Main {
                 minQualityHypothesis = bestHypoteses.get(sizeOfBestHypothesis).getQuality();
             }
 
-            if(calculateOptimisticQuality(F, hypothesisNode, data, p0) < minQualityHypothesis){
+            if(calculateOptimisticQuality(F, hypothesisNode, data, labels, p0, m) < minQualityHypothesis){
                 hypothesisNode.visited = true;
                 hypothesisNode.prune();
             } else{
@@ -148,22 +148,45 @@ public class Main {
         }else {
             p = calculateP(hypothesisNode, data, labels, m);
         }
-        double g = extSize(hypothesisNode, data, labels, m);
+        double quality = 0;
+        double g = ((double)extSize(hypothesisNode, data, labels, m))/((double) labels.length);
         switch (F){
             case 1:
+                quality = Math.sqrt(g) * Math.abs(p-p0);
                 break;
             case 2:
+                quality = ((g)/(1.0-g))*Math.pow(p-p0, 2);
                 break;
             case 3:
+                quality = g*(2*p-1.0) + 1 - p0;
                 break;
         }
-        return 0;
+        hypothesisNode.setQuality(quality);
+        return quality;
     }
-    public static double calculateOptimisticQuality(int F, HypothesisNode hypothesisNode, boolean[][] data, double p0){
-        return 0;
-    }
-    public static List<HypothesisNode> getUnvisitedChild(HypothesisNode hypothesisNode){
-return null;
+    public static double calculateOptimisticQuality(int F, HypothesisNode hypothesisNode, boolean[][] data, boolean[] labels, double p0, int m){
+        if(hypothesisNode.isOptimalQualitySet()){
+            return hypothesisNode.getOptimalQuality();
+        }
+        double p = 0;
+        if(hypothesisNode.isPSet()){
+            p = hypothesisNode.getP();
+        }else {
+            p = calculateP(hypothesisNode, data, labels, m);
+        }
+        double g = ((double)extSize(hypothesisNode, data, labels, m))/((double) labels.length);
+        double optimalQuality = 0;
+        switch (F){
+            case 1:
+                optimalQuality = Math.sqrt(g)*Math.max(p0, 1-p0);
+                break;
+            case 2:
+            case 3:
+                optimalQuality = calculateQuality(F, hypothesisNode, data, p0, labels, m);
+                break;
+        }
+        hypothesisNode.setOptimalQuality(optimalQuality);
+        return optimalQuality;
     }
 
     /**
