@@ -1,6 +1,6 @@
+import javax.xml.soap.Node;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by oguz on 24/05/16.
@@ -14,7 +14,7 @@ public class Main {
          */
         boolean[][] data;
         //Sizeis number of rows(instances)
-        boolean[] label;
+        boolean[] labels;
         String fileName = "SPECT.train.txt";
 
         List<HypothesisNode> bestHypoteses = new ArrayList<>();
@@ -32,7 +32,7 @@ public class Main {
             n = Integer.parseInt(nums[1]);
             k = Integer.parseInt(nums[2]);
             F = Integer.parseInt(nums[3]);
-            label = new boolean[m];
+            labels = new boolean[m];
             data = new boolean[m][n];
 
             int row = 0;
@@ -41,22 +41,93 @@ public class Main {
                 for(int i = 0; i < n; i++){
                     data[row][i] = bits[i].equals("1");
                 }
-                label[row] = bits[n].equals("1");
+                labels[row] = bits[n].equals("1");
                 row++;
             }
         }
 
         HypothesisNode startingNode = new HypothesisNode(n, -1, -1, null);
+        int numOfPositives = 0;
+        for(boolean label : labels){
+            if(label)
+                numOfPositives++;
+        }
 
-        traverseNodes(1, startingNode, data);
+        double p0 = ((double)numOfPositives)/((double)n);
+
+        bfs(F, startingNode, data, bestHypoteses, k, p0);
 
     }
 
 
-    public static void traverseNodes(int F, HypothesisNode hypothesisNode, boolean[][] data, List<HypothesisNode> bestHypoteses, int maxBest){
+    public static void bfs(int F, HypothesisNode hypothesisNode,
+                           boolean[][] data, List<HypothesisNode> bestHypoteses,
+                           int sizeOfBestHypothesis, double p0){
+        // DFS uses Stack data structure
+        double minQualityHypothesis = 0;
+        Queue queue = new LinkedList();
+        queue.add(hypothesisNode);
+        hypothesisNode.visited = true;
+        while (!queue.isEmpty()){
+            hypothesisNode = (HypothesisNode) queue.remove();
+            if(bestHypoteses.size()<sizeOfBestHypothesis){
+                bestHypoteses.add(hypothesisNode);
+            } else if(calculateQuality(F, hypothesisNode, data, p0) > minQualityHypothesis){
+                bestHypoteses.set(sizeOfBestHypothesis, hypothesisNode);
+                Collections.sort(bestHypoteses, new Comparator<HypothesisNode>() {
+                    @Override
+                    public int compare(HypothesisNode o1, HypothesisNode o2) {
+                        if(o1.quality > o2.quality)
+                            return 1;
+                        if (o1.quality < o2.quality)
+                            return -1;
+                        return 0;
+                    }
+                });
+                minQualityHypothesis = bestHypoteses.get(sizeOfBestHypothesis).quality;
+            }
+
+            if(calculateOptimisticQuality(F, hypothesisNode, data, p0) < minQualityHypothesis){
+                hypothesisNode.visited = true;
+                hypothesisNode.prune();
+            } else{
+                List<HypothesisNode> children = hypothesisNode.children;
+                for (HypothesisNode child : children) {
+                    if (!child.visited) {
+                        queue.add(child);
+                        child.visited = true;
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
+    public static void traverseNodes2(int F, HypothesisNode hypothesisNode,
+                                     boolean[][] data, List<HypothesisNode> bestHypoteses,
+                                     int minQualityHypothesis, int sizeOfBestHypothesis){
         double quality = calculateQuality(F, hypothesisNode, data);
-        if(bestHypoteses.size() < maxBest | )
-    }
+        if(bestHypoteses.size() < sizeOfBestHypothesis){
+            bestHypoteses.add(hypothesisNode);
+        }else if(minQualityHypothesis< quality){
+            bestHypoteses.set(sizeOfBestHypothesis-1, hypothesisNode);
+            Collections.sort(bestHypoteses, new Comparator<HypothesisNode>() {
+                @Override
+                public int compare(HypothesisNode o1, HypothesisNode o2) {
+                    if (o1.quality < o2.quality) return -1;
+                    if (o1.quality > o2.quality) return 1;
+                    return 0;
+                }
+            });
+
+        }
+        double optimalQuality = calculateOptimisticQuality(F, hypothesisNode, data);
+        if(optimalQuality < minQualityHypothesis){
+            hypothesisNode.prune();
+        }
+
+    }*/
 
 
 
@@ -67,7 +138,23 @@ public class Main {
      * @param data dataset
      * @return
      */
-    public static double calculateQuality(int F, HypothesisNode hypothesisNode, boolean[][] data){
+    public static double calculateQuality(int F, HypothesisNode hypothesisNode, boolean[][] data, double p0){
+
         return 0;
+    }
+    public static double calculateOptimisticQuality(int F, HypothesisNode hypothesisNode, boolean[][] data, double p0){
+
+    }
+    public static List<HypothesisNode> getUnvisitedChild(HypothesisNode hypothesisNode){
+return null;
+    }
+
+    public static int extSize(HypothesisNode hypothesisNode, boolean[][] data, boolean[] labels, int m){
+        int total = 0;
+        for(int i = 0; i < labels.length; i++){
+            for(int j = 0; j < m; j++){
+
+            }
+        }
     }
 }

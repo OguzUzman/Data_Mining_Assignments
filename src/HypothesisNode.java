@@ -16,14 +16,14 @@ public class HypothesisNode{
     int[] hypothesis;
 
     HypothesisNode father;
-    double quality;
-    List<HypothesisNode> children = new ArrayList<>();
-    boolean pruned = false;
+    double quality, optimalQuality;
+    List<HypothesisNode> children = null;
 
     public int getChildrenNum() {
         return children.size();
     }
 
+    int n, index;
     /**
      *
      * @param n
@@ -32,6 +32,8 @@ public class HypothesisNode{
      */
 
     public HypothesisNode(int n, int index, int value, HypothesisNode father) {
+        this.n = n;
+        this.index = index;
         try {
             hypothesis = new int[n];
             if (index == -1) { //Starting node
@@ -53,14 +55,6 @@ public class HypothesisNode{
             t.printStackTrace();
         }
 
-    }
-
-    public void prune(){
-        pruned = true;
-    }
-
-    public boolean isPruned(){
-        return pruned;
     }
 
     public void generateChildren(int index, int n){
@@ -90,8 +84,25 @@ public class HypothesisNode{
     }
 
     public List<HypothesisNode> getChildren(){
+        if(children == null){
+            generateChildren();
+        }
         return children;
     }
 
+    public void prune(){
+        father.children.remove(this);
+    }
+
+    public boolean visited = false;
+
+    public List<HypothesisNode> generateChildren(){
+        children = new ArrayList<>();
+        for(int i = index + 1; i <n ; i++){
+            children.add(new HypothesisNode(n, i, 1, this));
+            children.add(new HypothesisNode(n, i, 0, this));
+        }
+        return children;
+    }
 
 }
