@@ -16,10 +16,10 @@ public class HypothesisNode{
     int[] hypothesis;
 
     HypothesisNode father;
-    private double quality, optimalQuality;
+    private double quality = -1, optimalQuality;
     boolean qualityIsSet = false;
     boolean optimalQualitySet = false;
-    List<HypothesisNode> children = null;
+    private List<HypothesisNode> children = null;
     int extSize = -1;
 
     public double getQuality() {
