@@ -54,12 +54,19 @@ public class Main {
         }
 
         double p0 = percentageOfPositivesInDataSet(labels);
+        List<HypothesisNode> startingHypothesis = new ArrayList<>();
+        startingHypothesis.add(startingNode);
+        List<HypothesisNode> hypothesisNodes = new ArrayList<>();
+        bfs3(F, startingHypothesis, data, bestHypoteses, k, p0, labels, m, 0, n, 0, new ArrayList<HypothesisNode>());
 
-        bfs(F, startingNode, data, bestHypoteses, k, p0, labels, m);
+
+        for(HypothesisNode hypothesisNode : bestHypoteses){
+            System.out.println(hypothesisNode);
+        }
 
     }
 
-
+/*
     public static void bfs(int F, HypothesisNode hypothesisNode,
                            final boolean[][] data, List<HypothesisNode> bestHypoteses,
                            int sizeOfBestHypothesis, final double p0, final boolean[] labels, final int m){
@@ -102,60 +109,56 @@ public class Main {
             }
         }
     }
+    */
 
-    public static void bfs2(int F, HypothesisNode hypothesisNode,
+    public static void bfs3(int F, List<HypothesisNode> hypothesisNodes,
                             final boolean[][] data, List<HypothesisNode> bestHypoteses,
-                            int sizeOfBestHypothesis, final double p0, final boolean[] labels, final int m) {
-        double minQualityHypothesis = 0;
-        //Queue queue = new LinkedList();
-        //queue.add(hypothesisNode);
-        hypothesisNode.visited = true;
+                            int sizeOfBestHypothesis, final double p0, final boolean[] labels, final int m, double worstQualityHypothesis, int numberOfAttributes, int level, List<HypothesisNode> all ){
+        if(hypothesisNodes.size() == 0)
+            return;
+        Iterator<HypothesisNode> iterator = hypothesisNodes.iterator();
+        List<HypothesisNode> childrenHypotheses = new ArrayList<>();
+        while (iterator.hasNext()){
+            HypothesisNode hypothesisNode = iterator.next();
+            if(bestHypoteses.size() < sizeOfBestHypothesis){
+                bestHypoteses.add(hypothesisNode);
+                sortHypothesesArray(bestHypoteses, F, data, p0, labels, m, numberOfAttributes);
+                worstQualityHypothesis = calculateQuality(F, bestHypoteses.get(bestHypoteses.size()-1), data, p0,
+                        labels, m, numberOfAttributes);
+            } else if(calculateQuality(F, hypothesisNode, data, p0, labels, m, numberOfAttributes) > worstQualityHypothesis){
+                bestHypoteses.set(sizeOfBestHypothesis-1, hypothesisNode);
+                sortHypothesesArray(hypothesisNodes, F, data, p0, labels, m, numberOfAttributes);
+                worstQualityHypothesis = calculateQuality(F, bestHypoteses.get(sizeOfBestHypothesis-1), data, p0,
+                        labels, m, numberOfAttributes);
+            }
 
-        List<HypothesisNode> subset = hypothesisNode.getChildren();
+            double optimisticQuality = calculateOptimisticQuality(F, hypothesisNode, data, labels, p0, m, numberOfAttributes);
 
-        while (!subset.isEmpty()) {
-            List<HypothesisNode> nextSubset = new ArrayList<HypothesisNode>();
-            for (int i = 0; i < subset.size(); i++) {
-                if(bestHypoteses.size()<sizeOfBestHypothesis){
-                    bestHypoteses.add(subset.get(i));
-                } else if(calculateQuality(F, subset.get(i), data, p0, labels, m) > minQualityHypothesis){
-                    bestHypoteses.set(sizeOfBestHypothesis, subset.get(i));
-                    final HypothesisNode tempHypothesisNode = subset.get(i);
-                    final int tempF = F;
-                    Collections.sort(bestHypoteses, new Comparator<HypothesisNode>() {
-                        @Override
-                        public int compare(HypothesisNode o1, HypothesisNode o2) {
-                            if(calculateQuality(tempF, tempHypothesisNode, data, p0, labels, m) > calculateQuality(tempF, tempHypothesisNode, data, p0, labels, m))
-                                return 1;
-                            if (calculateQuality(tempF, tempHypothesisNode, data, p0, labels, m) < calculateQuality(tempF, tempHypothesisNode, data, p0, labels, m))
-                                return -1;
-                            return 0;
-                        }
-                    });
-                    minQualityHypothesis = bestHypoteses.get(sizeOfBestHypothesis).getQuality();
-                }
+            double g = ((double)extSize(hypothesisNode, data, labels, m, numberOfAttributes))/((double) labels.length);
 
-                if(calculateOptimisticQuality(F, subset.get(i), data, labels, p0, m) < minQualityHypothesis){
-                    subset.get(i).visited = true;
-                    subset.get(i).prune();
-                } else{ //do nothing now?
-                    /*
-                    List<HypothesisNode> children = hypothesisNode.children;
-                    for (HypothesisNode child : children) {
-                        if (!child.visited) {
-                            queue.add(child);
-                            child.visited = true;
-                        }
-                    }
-                    */
-                }
-
-                // add children to next subset
-                if (subset.get(i).getChildren().size() == 0) {
-
-                }
+            if((optimisticQuality < worstQualityHypothesis)){
+                //Prune // Not really necessary
+        //        all.addAll(hypothesisNode.getChildren());
+                iterator.remove();
+            } else {
+                childrenHypotheses.addAll(hypothesisNode.getChildren());
             }
         }
+        bfs3(F, childrenHypotheses, data, bestHypoteses, sizeOfBestHypothesis, p0, labels, m, worstQualityHypothesis, numberOfAttributes, ++level, all);
+    }
+
+    public static void sortHypothesesArray(List<HypothesisNode> hypothesisNodes, final int F, final boolean[][] data,
+                                           final double p0, final boolean[] labels, final int m, final int numberOfAtributes){
+        Collections.sort(hypothesisNodes, new Comparator<HypothesisNode>() {
+            @Override
+            public int compare(HypothesisNode o1, HypothesisNode o2) {
+                if(calculateQuality(F, o1, data, p0, labels, m, numberOfAtributes) > calculateQuality(F, o2, data, p0, labels, m, numberOfAtributes))
+                    return -1;
+                if (calculateQuality(F, o1, data, p0, labels, m, numberOfAtributes) < calculateQuality(F, o2, data, p0, labels, m, numberOfAtributes))
+                    return 1;
+                return 0;
+            }
+        });
     }
 
 
@@ -194,17 +197,17 @@ public class Main {
      * @param data dataset
      * @return
      */
-    public static double calculateQuality(int F, HypothesisNode hypothesisNode, boolean[][] data, double p0, boolean[] labels, int m){
-        if(hypothesisNode.isQualityIsSet())
-            return hypothesisNode.getQuality();
+    public static double calculateQuality(int F, HypothesisNode hypothesisNode, boolean[][] data, double p0, boolean[] labels, int m, int numberOfAttributes){
+       // if(hypothesisNode.isQualityIsSet())
+            //return hypothesisNode.getQuality();
         double p = 0;
         if(hypothesisNode.isPSet()){
             p = hypothesisNode.getP();
         }else {
-            p = calculateP(hypothesisNode, data, labels, m);
+            p = calculateP(hypothesisNode, data, labels, m, numberOfAttributes);
         }
         double quality = 0;
-        double g = ((double)extSize(hypothesisNode, data, labels, m))/((double) labels.length);
+        double g = ((double)extSize(hypothesisNode, data, labels, m, numberOfAttributes))/((double) labels.length);
         switch (F){
             case 1:
                 quality = Math.sqrt(g) * Math.abs(p-p0);
@@ -219,7 +222,7 @@ public class Main {
         hypothesisNode.setQuality(quality);
         return quality;
     }
-    public static double calculateOptimisticQuality(int F, HypothesisNode hypothesisNode, boolean[][] data, boolean[] labels, double p0, int m){
+    public static double calculateOptimisticQuality(int F, HypothesisNode hypothesisNode, boolean[][] data, boolean[] labels, double p0, int m, int numberOfAttributes){
         if(hypothesisNode.isOptimalQualitySet()){
             return hypothesisNode.getOptimalQuality();
         }
@@ -227,9 +230,9 @@ public class Main {
         if(hypothesisNode.isPSet()){
             p = hypothesisNode.getP();
         }else {
-            p = calculateP(hypothesisNode, data, labels, m);
+            p = calculateP(hypothesisNode, data, labels, m, numberOfAttributes);
         }
-        double g = ((double)extSize(hypothesisNode, data, labels, m))/((double) labels.length);
+        double g = ((double)extSize(hypothesisNode, data, labels, m, numberOfAttributes))/((double) labels.length);
         double optimalQuality = 0;
         switch (F){
             case 1:
@@ -237,7 +240,7 @@ public class Main {
                 break;
             case 2:
             case 3:
-                optimalQuality = calculateQuality(F, hypothesisNode, data, p0, labels, m);
+                optimalQuality = calculateQuality(F, hypothesisNode, data, p0, labels, m, numberOfAttributes);
                 break;
         }
         hypothesisNode.setOptimalQuality(optimalQuality);
@@ -265,14 +268,14 @@ public class Main {
      * @param m
      * @return
      */
-    public static int extSize(HypothesisNode hypothesisNode, boolean[][] data, boolean[] labels, int m){
+    public static int extSize(HypothesisNode hypothesisNode, boolean[][] data, boolean[] labels, int m, int numberOfAttributes){
         if(hypothesisNode.extSize != -1)
             return hypothesisNode.extSize;
         int total = 0;
         int[] hypothesis = hypothesisNode.hypothesis;
         for(int i = 0; i < labels.length; i++){
             boolean matches = true;
-            for(int j = 0; j < m; j++){
+            for(int j = 0; j < numberOfAttributes; j++){
                 /**
                  * Since "0 and 1" or "1 and 1" will give 0; and others 1; We can check it by summation. 0+ 1 = 1+0 = 1
                  * While -1 +0 = -1; -1 + 1 = 0
@@ -297,20 +300,25 @@ public class Main {
      * @param m
      * @return
      */
-    public static int extTIntersectionSize(HypothesisNode hypothesisNode, boolean[][] data, boolean[] labels, int m){
+    public static int extTIntersectionSize(HypothesisNode hypothesisNode, boolean[][] data, boolean[] labels, int m, int numberOfAttributes){
         int total = 0;
         int[] hypothesis = hypothesisNode.hypothesis;
         for(int i = 0; i < labels.length; i++){
             boolean matches = true;
             if(labels[i]) {
-                for (int j = 0; j < m; j++) {
+                for (int j = 0; j < numberOfAttributes; j++) {
                     /**
                      * Since "0 and 1" or "1 and 1" will give 0; and others 1; We can check it by summation. 0+ 1 = 1+0 = 1
                      * While -1 +0 = -1; -1 + 1 = 0
                      */
-                    if ((hypothesis[j] + (data[i][j] ? 1 : 0)) == 1) {
-                        matches = false;
-                        break;
+                    try {
+
+                        if ((hypothesis[j] + (data[i][j] ? 1 : 0)) == 1) {
+                            matches = false;
+                            break;
+                        }
+                    } catch (Throwable t){
+                        t.printStackTrace();
                     }
                 }
             } else {
@@ -329,12 +337,16 @@ public class Main {
      * @param data
      * @return
      */
-    public static double calculateP(HypothesisNode hypothesisNode, boolean[][] data, boolean[] labels, int m){
+    public static double calculateP(HypothesisNode hypothesisNode, boolean[][] data, boolean[] labels, int m, int numberOfAttributes){
         if(hypothesisNode.isPSet())
             return hypothesisNode.getP();
-        double intersectionCount = extTIntersectionSize(hypothesisNode, data, labels, m);
-        double extSize = extSize(hypothesisNode, data, labels, m);
+        double intersectionCount = extTIntersectionSize(hypothesisNode, data, labels, m, numberOfAttributes);
+        double extSize = extSize(hypothesisNode, data, labels, m, numberOfAttributes);
+
         double p = intersectionCount/extSize;
+        if(extSize == 0){
+            p = 1;
+        }
         hypothesisNode.setP(p);
         return p;
     }
