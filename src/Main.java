@@ -8,14 +8,14 @@ import java.util.*;
 public class Main {
     public static void main(String[] args) throws IOException {
 
-
+        long start = System.currentTimeMillis();
         /**
          * First [] is row; the other is column.
          */
         boolean[][] data;
         //Sizeis number of rows(instances)
         boolean[] labels;
-        String fileName = "SPECT.train.txt";
+        String fileName = "data0_simple.txt";
 
         List<HypothesisNode> bestHypoteses = new ArrayList<>();
         double minQuality = 0;
@@ -93,9 +93,10 @@ public class Main {
         PrintWriter writer = new PrintWriter("./output.txt");
         writer.print(sb);
         writer.close();
+        System.out.println("Total "+ (System.currentTimeMillis()-start) + " milliseconds");
     }
 
-/*
+/**
     public static void bfs(int F, HypothesisNode hypothesisNode,
                            final boolean[][] data, List<HypothesisNode> bestHypoteses,
                            int sizeOfBestHypothesis, final double p0, final boolean[] labels, final int m){
@@ -148,25 +149,28 @@ public class Main {
         Iterator<HypothesisNode> iterator = hypothesisNodes.iterator();
         List<HypothesisNode> childrenHypotheses = new ArrayList<>();
         while (iterator.hasNext()){
+            int a = -1;
             HypothesisNode hypothesisNode = iterator.next();
             if(bestHypoteses.size() < sizeOfBestHypothesis){
                 bestHypoteses.add(hypothesisNode);
                 sortHypothesesArray(bestHypoteses, F, data, p0, labels, m, numberOfAttributes);
                 worstQualityHypothesis = calculateQuality(F, bestHypoteses.get(bestHypoteses.size()-1), data, p0,
                         labels, m, numberOfAttributes);
+                a = 1;
             } else if(calculateQuality(F, hypothesisNode, data, p0, labels, m, numberOfAttributes) > worstQualityHypothesis){
                 sortHypothesesArray(bestHypoteses, F, data, p0, labels, m, numberOfAttributes);
                 bestHypoteses.set(sizeOfBestHypothesis-1, hypothesisNode);
                 sortHypothesesArray(bestHypoteses, F, data, p0, labels, m, numberOfAttributes);
                 worstQualityHypothesis = calculateQuality(F, bestHypoteses.get(sizeOfBestHypothesis-1), data, p0,
                         labels, m, numberOfAttributes);
+                a= 2;
             }
 
             double optimisticQuality = calculateOptimisticQuality(F, hypothesisNode, data, labels, p0, m, numberOfAttributes);
 
             double g = ((double)extSize(hypothesisNode, data, labels, m, numberOfAttributes))/((double) labels.length);
 
-            if((optimisticQuality < worstQualityHypothesis)){
+            if((optimisticQuality < worstQualityHypothesis) | g < 0.2){
                 //Prune // Not really necessary
         //        all.addAll(hypothesisNode.getChildren());
                 iterator.remove();
