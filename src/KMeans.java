@@ -29,6 +29,7 @@ public class KMeans {
         double centermu[] = new double[3];
         boolean centerMuSet = false;
         double[/** Rows**/][/**Columns**/] data;
+
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
 
             int row = 0;
@@ -62,7 +63,7 @@ public class KMeans {
                 centerMuSet = true;
 
             } catch (Exception e){
-                System.out.println("Error var amk");
+                //System.out.println("Error var amk");
             }
         }
 
@@ -103,7 +104,10 @@ public class KMeans {
             }
 
 
-            if(assignedCenters != null){//Means not in the first loop
+            if(assignedCenters != null){
+                /**
+                 * Check if all center indices are the same.
+                 */
                 boolean allSame = true;
                 for(int i = 0; i < numOfSamples; i++){
                     if(newAssignedCenters[i] != assignedCenters[i]) {
@@ -111,6 +115,9 @@ public class KMeans {
                         break;
                     }
                 }
+                /**
+                 * If they are all same, we converged.
+                 */
                 if (allSame){
                     break;
                 }
@@ -135,6 +142,9 @@ public class KMeans {
                 divide(newCenters[j], centerAssigneeCount[j]);
             }
 
+            /**
+             * Print current state of centers
+             */
             print(data, newCenters, newAssignedCenters,step++);
             centers = newCenters;
             assignedCenters = newAssignedCenters;
@@ -174,12 +184,16 @@ public class KMeans {
 
     }
 
+    /**
+     * Method to calculate purity
+     * @return
+     */
     public double computePurity(){
-        HashMap<String, HashMap<Integer, Integer>> labelTypes = new HashMap();
+        HashMap<String, HashMap<Integer, Integer>> labelTypes = new HashMap<String, HashMap<Integer, Integer>>();
         for (int i = 0; i < numOfSamples; i++) {
             String la = labels[i];
             if(!labelTypes.containsKey(la)){
-                HashMap<Integer, Integer> matches = new HashMap<>();
+                HashMap<Integer, Integer> matches = new HashMap<Integer, Integer>();
                 for (int j = 0; j < numOfCenters; j++) {
                     matches.put(j,0);
                 }
@@ -212,11 +226,22 @@ public class KMeans {
     }
 
 
+    /**
+     * adds addition to data
+     * @param data
+     * @param addition
+     */
     public void sum(double[] data, double[] addition){
         for (int i = 0; i < data.length; i++) {
             data[i] += addition[i];
         }
     }
+
+    /**
+     * Divides the array data by the divisor
+     * @param data
+     * @param divisor
+     */
     public void divide(double[] data, double divisor){
         if(divisor == 0)
             return;
@@ -225,11 +250,18 @@ public class KMeans {
         }
     }
 
+    /**
+     * Prints the points and their assigned group indices.
+     * @param data
+     * @param centers
+     * @param assignedCenter
+     * @param step
+     */
     public static void print(double[][] data, double[][] centers, int[] assignedCenter, int step){
         StringBuilder stringBuilder = new StringBuilder();
         for(int i = 0; i < assignedCenter.length; i++){
 
-            List<String> list = new ArrayList<>();
+            List<String> list = new ArrayList<String>();
             for (int j = 0; j < data[i].length; j++) {
                 stringBuilder.append(String.format("%.3f",data[i][j]));
                 if(j == data[i].length-1){

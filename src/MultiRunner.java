@@ -9,11 +9,11 @@ public class MultiRunner {
             /**
              *
              */
-            KMeans kMeans = new KMeans("./gaussian/myfile_"+i+".txt", "euclidean");
+            KMeans kMeans = new KMeans("./data/myfile_"+i+".txt", "euclidean");
             StringBuilder stringBuilder = new StringBuilder();
             kMeans.stringBuilder = stringBuilder;
             kMeans.run();
-            KMeans customkMeans = new KMeans("./gaussian/myfile_"+i+".txt", "custom");
+            KMeans customkMeans = new KMeans("./data/myfile_"+i+".txt", "custom");
             StringBuilder stringBuilder1 = new StringBuilder();
             customkMeans.stringBuilder = stringBuilder1;
             customkMeans.run();
